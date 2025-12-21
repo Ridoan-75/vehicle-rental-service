@@ -2,12 +2,10 @@ import { Request, Response } from "express";
 import { vehicleService } from "./vehicle.service";
 import { bookingService } from "../bookings/booking.service";
 
-// Admin: create vehicle
+
 const createVehicle = async (req: Request, res: Response) => {
   try {
     const { vehicle_name, type, registration_number, daily_rent_price, availability_status } = req.body;
-
-    // validation
     if (!vehicle_name || !type || !registration_number || !daily_rent_price) {
       return res.status(400).json({
         success: false,
@@ -33,7 +31,7 @@ const createVehicle = async (req: Request, res: Response) => {
   }
 };
 
-// Public: get all vehicles
+
 const getAllVehicles = async (req: Request, res: Response) => {
   try {
     await bookingService.autoReturnExpiredBookings();
@@ -57,7 +55,7 @@ const getAllVehicles = async (req: Request, res: Response) => {
   }
 };
 
-// Public: get vehicle by ID
+
 const getVehicleById = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.vehicleId!, 10);
@@ -77,7 +75,7 @@ const getVehicleById = async (req: Request, res: Response) => {
   }
 };
 
-// Admin: update vehicle
+
 const updateVehicleById = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.vehicleId!, 10);
@@ -97,7 +95,7 @@ const updateVehicleById = async (req: Request, res: Response) => {
   }
 };
 
-// Admin: delete vehicle
+
 const deleteVehicleById = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.vehicleId!, 10);
