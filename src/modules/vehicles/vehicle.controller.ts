@@ -38,7 +38,20 @@ const getAllVehicles = async (req: Request, res: Response) => {
   try {
     await bookingService.autoReturnExpiredBookings();
     const result = await vehicleService.getAllVehicles();
-    res.status(200).json({ success: true, data: result.rows });
+    
+    if (result.rows.length === 0) {
+      return res.status(200).json({ 
+        success: true, 
+        message: "No vehicles found",
+        data: [] 
+      });
+    }
+    
+    res.status(200).json({ 
+      success: true, 
+      message: "Vehicles retrieved successfully",
+      data: result.rows 
+    });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -54,7 +67,11 @@ const getVehicleById = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: "Vehicle not found" });
     }
 
-    res.status(200).json({ success: true, data: result.rows[0] });
+    res.status(200).json({ 
+      success: true, 
+      message: "Vehicle retrieved successfully",
+      data: result.rows[0] 
+    });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -92,6 +109,12 @@ const deleteVehicleById = async (req: Request, res: Response) => {
 
     res.status(200).json({ success: true, message: "Vehicle deleted successfully" });
   } catch (error: any) {
+    if (error.message.includes("active bookings")) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -5,16 +5,15 @@ import { AuthRequest } from "../../middleware/auth.middleware";
 
 const createBooking = async (req: AuthRequest, res: Response) => {
   try {
-    const { vehicle_id, rent_start_date, rent_end_date } = req.body;
+    const { customer_id, vehicle_id, rent_start_date, rent_end_date } = req.body;
 
-    if (!vehicle_id || !rent_start_date || !rent_end_date) {
+    if (!customer_id || !vehicle_id || !rent_start_date || !rent_end_date) {
       return res.status(400).json({
         success: false,
-        message: "vehicle_id, rent_start_date and rent_end_date are required",
+        message: "customer_id, vehicle_id, rent_start_date and rent_end_date are required",
       });
     }
 
-    const customer_id = req.user!.userId;
     const booking = await bookingService.createBooking({
       customer_id,
       vehicle_id,
@@ -31,7 +30,6 @@ const createBooking = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 const getBookings = async (req: AuthRequest, res: Response) => {
   try {
@@ -69,7 +67,7 @@ const getBookings = async (req: AuthRequest, res: Response) => {
 const updateBookingStatus = async (req: AuthRequest, res: Response) => {
   try {
     const bookingId = parseInt(req.params.bookingId!, 10);
-    const { status } = req.body; // "cancelled" or "returned"
+    const { status } = req.body;
 
     if (!status || !["cancelled", "returned"].includes(status)) {
       return res.status(400).json({
@@ -78,10 +76,31 @@ const updateBookingStatus = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const updated = await bookingService.updateBookingStatus(bookingId, status);
+    const { role } = req.user!;
+
+    if (role === "customer" && status === "returned") {
+      return res.status(403).json({
+        success: false,
+        message: "Customers cannot mark bookings as returned",
+      });
+    }
+
+    if (role === "admin" && status === "cancelled") {
+      return res.status(403).json({
+        success: false,
+        message: "Admins cannot cancel bookings",
+      });
+    }
+
+    const updated = await bookingService.updateBookingStatus(bookingId, status, role);
+    
+    const message = status === "returned" 
+      ? "Booking marked as returned. Vehicle is now available"
+      : "Booking cancelled successfully";
+
     res.status(200).json({
       success: true,
-      message: `Booking status updated to ${status}`,
+      message,
       data: updated,
     });
   } catch (error: any) {

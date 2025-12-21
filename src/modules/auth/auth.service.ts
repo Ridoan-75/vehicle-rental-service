@@ -21,7 +21,7 @@ const signup = async (payload: {
     `INSERT INTO users (name, email, password, phone, role)
      VALUES ($1, $2, $3, $4, $5)
      RETURNING id, name, email, phone, role, created_at`,
-    [name, email.toLowerCase(), hashedPassword, phone || null, role || "customer"]
+    [name, email.toLowerCase(), hashedPassword, phone, role || "customer"]
   );
 
   return result.rows[0];
@@ -39,6 +39,7 @@ const signin = async (email: string, password: string) => {
   const token = jwt.sign({ userId: user.id, role: user.role }, ENV.jwtSecret, { expiresIn: "1d" });
 
   return {
+    token,
     user: {
       id: user.id,
       name: user.name,
@@ -46,7 +47,6 @@ const signin = async (email: string, password: string) => {
       phone: user.phone,
       role: user.role,
     },
-    token,
   };
 };
 

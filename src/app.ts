@@ -20,7 +20,7 @@ app.use("/api/v1/bookings", bookingRoutes);
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "Vehicle Renteal Service System Server is Running",
+    message: "Vehicle Rental System Server is Running",
   });
 });
 

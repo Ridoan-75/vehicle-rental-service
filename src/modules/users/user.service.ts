@@ -34,19 +34,20 @@ const getUserById = async (id: number) => {
 
 
 const updateUserById = async (
-  payload: { name?: string; phone?: string; role?: string },
+  payload: { name?: string; email?: string; phone?: string; role?: string },
   id: number
 ) => {
-  const { name, phone, role } = payload;
+  const { name, email, phone, role } = payload;
 
   const result = await pool.query(
     `UPDATE users
         SET name  = COALESCE($1, name),
-            phone = COALESCE($2, phone),
-            role  = COALESCE($3, role)
-      WHERE id = $4
+            email = COALESCE($2, email),
+            phone = COALESCE($3, phone),
+            role  = COALESCE($4, role)
+      WHERE id = $5
       RETURNING id, name, email, phone, role, created_at`,
-    [name || null, phone || null, role || null, id]
+    [name || null, email || null, phone || null, role || null, id]
   );
   return result;
 };

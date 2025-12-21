@@ -4,7 +4,8 @@ import { requireAuth } from "../../middleware/auth.middleware";
 
 const router = Router();
 
-router.post("/", requireAuth(["admin", "customer"]), bookingController.createBooking);
+router.post("/", requireAuth(["customer", "admin"]), bookingController.createBooking);
+
 router.get("/", requireAuth(["admin", "customer"]), bookingController.getBookings);
 
 router.put(

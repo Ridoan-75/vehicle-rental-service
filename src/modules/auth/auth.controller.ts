@@ -7,11 +7,24 @@ const signup = async (req: Request, res: Response) => {
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Name, email, and password are required",
+        message: "Name, email, password and phone are required",
       });
     }
 
-    const user = await authService.signup({ name, email, password, phone, role });
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
+    }
+
+    const user = await authService.signup({
+      name,
+      email,
+      password,
+      phone,
+      role,
+    });
     res.status(201).json({
       success: true,
       message: "User registered successfully",
@@ -36,8 +49,10 @@ const signin = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       message: "Login successful",
-      data: result.user,
-      token: result.token,
+      data: {
+        token: result.token,
+        user: result.user,
+      },
     });
   } catch (error: any) {
     res.status(401).json({ success: false, message: error.message });

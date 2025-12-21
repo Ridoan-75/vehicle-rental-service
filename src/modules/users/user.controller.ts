@@ -6,7 +6,11 @@ import { AuthRequest } from "../../middleware/auth.middleware";
 const getAllUsers = async (req: AuthRequest, res: Response) => {
   try {
     const result = await userService.getAllUsers();
-    res.status(200).json({ success: true, data: result.rows });
+    res.status(200).json({ 
+      success: true, 
+      message: "Users retrieved successfully",
+      data: result.rows 
+    });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }

@@ -53,7 +53,14 @@ const createBooking = async (payload: {
     );
 
     await client.query("COMMIT");
-    return bookingRes.rows[0];
+    
+    return {
+      ...bookingRes.rows[0],
+      vehicle: {
+        vehicle_name: vehicle.vehicle_name,
+        daily_rent_price: vehicle.daily_rent_price
+      }
+    };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
@@ -65,7 +72,6 @@ const createBooking = async (payload: {
 
 const getBookings = async (role: string, userId: number) => {
   if (role === "admin") {
-
     const result = await pool.query(
       `SELECT 
           b.id, b.customer_id, b.vehicle_id,
@@ -77,7 +83,24 @@ const getBookings = async (role: string, userId: number) => {
        JOIN vehicles v ON b.vehicle_id  = v.id
       ORDER BY b.id ASC`
     );
-    return result.rows;
+    
+    return result.rows.map(row => ({
+      id: row.id,
+      customer_id: row.customer_id,
+      vehicle_id: row.vehicle_id,
+      rent_start_date: row.rent_start_date,
+      rent_end_date: row.rent_end_date,
+      total_price: row.total_price,
+      status: row.status,
+      customer: {
+        name: row.customer_name,
+        email: row.customer_email
+      },
+      vehicle: {
+        vehicle_name: row.vehicle_name,
+        registration_number: row.registration_number
+      }
+    }));
   }
 
   const result = await pool.query(
@@ -92,12 +115,26 @@ const getBookings = async (role: string, userId: number) => {
     ORDER BY b.id ASC`,
     [userId]
   );
-  return result.rows;
+  
+  return result.rows.map(row => ({
+    id: row.id,
+    vehicle_id: row.vehicle_id,
+    rent_start_date: row.rent_start_date,
+    rent_end_date: row.rent_end_date,
+    total_price: row.total_price,
+    status: row.status,
+    vehicle: {
+      vehicle_name: row.vehicle_name,
+      registration_number: row.registration_number,
+      type: row.type
+    }
+  }));
 };
 
 const updateBookingStatus = async (
   bookingId: number,
-  status: "cancelled" | "returned"
+  status: "cancelled" | "returned",
+  role: string
 ) => {
   const client = await pool.connect();
   try {
@@ -110,6 +147,14 @@ const updateBookingStatus = async (
     if (bookingRes.rows.length === 0) throw new Error("Booking not found");
 
     const booking = bookingRes.rows[0];
+
+    if (status === "cancelled" && role === "customer") {
+      const today = new Date();
+      const startDate = new Date(booking.rent_start_date);
+      if (startDate <= today) {
+        throw new Error("Cannot cancel booking after start date");
+      }
+    }
 
     await client.query("UPDATE bookings SET status = $1 WHERE id = $2", [
       status,
@@ -124,7 +169,14 @@ const updateBookingStatus = async (
     }
 
     await client.query("COMMIT");
-    return { ...booking, status };
+    
+    const response = { ...booking, status };
+    
+    if (status === "returned") {
+      response.vehicle = { availability_status: "available" };
+    }
+    
+    return response;
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
@@ -132,7 +184,6 @@ const updateBookingStatus = async (
     client.release();
   }
 };
-
 const autoReturnExpiredBookings = async () => {
   const result = await pool.query(`
       UPDATE bookings
