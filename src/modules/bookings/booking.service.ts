@@ -55,10 +55,16 @@ const createBooking = async (payload: {
     await client.query("COMMIT");
     
     return {
-      ...bookingRes.rows[0],
+      id: bookingRes.rows[0].id,
+      customer_id: bookingRes.rows[0].customer_id,
+      vehicle_id: bookingRes.rows[0].vehicle_id,
+      rent_start_date: bookingRes.rows[0].rent_start_date,
+      rent_end_date: bookingRes.rows[0].rent_end_date,
+      total_price: Number(bookingRes.rows[0].total_price),
+      status: bookingRes.rows[0].status,
       vehicle: {
         vehicle_name: vehicle.vehicle_name,
-        daily_rent_price: vehicle.daily_rent_price
+        daily_rent_price: Number(vehicle.daily_rent_price)
       }
     };
   } catch (error) {
@@ -90,7 +96,7 @@ const getBookings = async (role: string, userId: number) => {
       vehicle_id: row.vehicle_id,
       rent_start_date: row.rent_start_date,
       rent_end_date: row.rent_end_date,
-      total_price: row.total_price,
+      total_price: Number(row.total_price),
       status: row.status,
       customer: {
         name: row.customer_name,
@@ -121,7 +127,7 @@ const getBookings = async (role: string, userId: number) => {
     vehicle_id: row.vehicle_id,
     rent_start_date: row.rent_start_date,
     rent_end_date: row.rent_end_date,
-    total_price: row.total_price,
+    total_price: Number(row.total_price),
     status: row.status,
     vehicle: {
       vehicle_name: row.vehicle_name,
@@ -170,7 +176,15 @@ const updateBookingStatus = async (
 
     await client.query("COMMIT");
     
-    const response = { ...booking, status };
+    const response: any = {
+      id: booking.id,
+      customer_id: booking.customer_id,
+      vehicle_id: booking.vehicle_id,
+      rent_start_date: booking.rent_start_date,
+      rent_end_date: booking.rent_end_date,
+      total_price: Number(booking.total_price),
+      status: status
+    };
     
     if (status === "returned") {
       response.vehicle = { availability_status: "available" };
@@ -184,6 +198,7 @@ const updateBookingStatus = async (
     client.release();
   }
 };
+
 const autoReturnExpiredBookings = async () => {
   const result = await pool.query(`
       UPDATE bookings

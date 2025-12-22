@@ -14,7 +14,7 @@ const createVehicle = async (payload: VehiclePayload) => {
   const result = await pool.query(
     `INSERT INTO vehicles (vehicle_name, type, registration_number, daily_rent_price, availability_status)
      VALUES ($1, $2, $3, $4, $5)
-     RETURNING *`,
+     RETURNING id, vehicle_name, type, registration_number, daily_rent_price, availability_status`,
     [vehicle_name, type, registration_number, daily_rent_price, availability_status || "available"]
   );
 
@@ -23,13 +23,22 @@ const createVehicle = async (payload: VehiclePayload) => {
 
 
 const getAllVehicles = async () => {
-  const result = await pool.query(`SELECT * FROM vehicles ORDER BY id ASC`);
+  const result = await pool.query(
+    `SELECT id, vehicle_name, type, registration_number, daily_rent_price, availability_status 
+     FROM vehicles 
+     ORDER BY id ASC`
+  );
   return result;
 };
 
 
 const getVehicleById = async (id: number) => {
-  const result = await pool.query(`SELECT * FROM vehicles WHERE id = $1`, [id]);
+  const result = await pool.query(
+    `SELECT id, vehicle_name, type, registration_number, daily_rent_price, availability_status 
+     FROM vehicles 
+     WHERE id = $1`, 
+    [id]
+  );
   return result;
 };
 
@@ -45,10 +54,9 @@ const updateVehicleById = async (
            type               = COALESCE($2, type),
            registration_number = COALESCE($3, registration_number),
            daily_rent_price   = COALESCE($4, daily_rent_price),
-           availability_status = COALESCE($5, availability_status),
-           updated_at          = NOW()
+           availability_status = COALESCE($5, availability_status)
      WHERE id = $6
-     RETURNING *`,
+     RETURNING id, vehicle_name, type, registration_number, daily_rent_price, availability_status`,
     [
       vehicle_name || null,
       type || null,

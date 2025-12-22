@@ -4,7 +4,7 @@ import { authService } from "./auth.service";
 const signup = async (req: Request, res: Response) => {
   try {
     const { name, email, password, phone, role } = req.body;
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !phone) {
       return res.status(400).json({
         success: false,
         message: "Name, email, password and phone are required",

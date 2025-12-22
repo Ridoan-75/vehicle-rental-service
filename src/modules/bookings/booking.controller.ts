@@ -14,6 +14,16 @@ const createBooking = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    const startDate = new Date(rent_start_date);
+    const endDate = new Date(rent_end_date);
+    
+    if (endDate <= startDate) {
+      return res.status(400).json({
+        success: false,
+        message: "rent_end_date must be after rent_start_date",
+      });
+    }
+
     const booking = await bookingService.createBooking({
       customer_id,
       vehicle_id,
